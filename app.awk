@@ -25,7 +25,10 @@ tmplt_mode && /^[|!]#/ {
 				tmplt_mode = 0
 				tmplt_indicator = 0
 
-				system(verbatim)
+				# TODO: Add support for other interpreters
+				# system(verbatim)
+				print verbatim > "/tmp/app.awk.tmp"
+				system("sh /tmp/app.awk.tmp")
 
 				verbatim = ""
 		}
