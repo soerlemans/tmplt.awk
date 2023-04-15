@@ -58,19 +58,20 @@ cmnt_mode {
 
 # Rule for detecting begin of template
 /^#[|!]/ {
-		# If we are on the first line we want to ignore shebangs
+		# If we are on the first line we do not want the shebang
+		# To have us enter template mode
 		if(NR != 1){
 				tmplt_mode = 1
 				tmplt_indicator = indicator($0)
 				tmplt_interpreter = interpreter($0)
-
-				next
 		}
+
+		next
 }
 
 # Rule for printing when we are not in the template mode
 ! tmplt_mode {
-		printf "%s\n", $0
+		print $0
 }
 
 # Rule for detecting end of template
