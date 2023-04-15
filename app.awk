@@ -28,6 +28,22 @@ BEGIN {
 		"mktemp --directory '/tmp/app.awk-XXXXXX'" | getline tmp_dir
 }
 
+# Rule for detecting begin of a comment block
+/^#\?/ {
+		cmnt_mode = 1
+}
+
+# Rule for detecting end of a comment block
+cmnt_mode && /^\?#/ {
+		cmnt_mode = 0
+		next
+}
+
+# As long as we are in comment mode skip the line
+cmnt_mode {
+		next
+}
+
 # Rule for printing when we are not in the template mode
 ! tmplt_mode && /^[^#]/ {
 	print $0
@@ -54,7 +70,10 @@ tmplt_mode {
 
 # Rule for detecting begin of template
 /^#[|!]/ {
-	tmplt_mode = 1
-  tmplt_indicator = indicator($0)
-	tmplt_interpreter = interpreter($0)
+		# If we are on the first line we want to ignore shebangs
+		if(NR != 1){
+				tmplt_mode = 1
+				tmplt_indicator = indicator($0)
+				tmplt_interpreter = interpreter($0)
+		}
 }
