@@ -1,7 +1,8 @@
 <!doctype html>
-<title>pp.awk example</title>
+<title>app.awk example</title>
 <ul>
 #!
+# The Default templating interpreter is sh
 i=1
 while test $i -le 10
 do

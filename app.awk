@@ -2,16 +2,30 @@
 
 
 # Function to extract the | or ! indicator
-function indicator()
+function indicator(t_str)
 {
-	start = match($0, /[|!]/)
-	return substr($0, start, 1)
+	start = match(t_str, /[|!]/)
+
+	return substr(t_str, start, 1)
 }
 
 # Function to extract the interpreter argument
-function interpreter()
+function interpreter(t_str)
 {
+		start = match(t_str, /^#[|!]:[a-zA-Z0-9]+/)
+		if(start){
+				str = substr(t_str, RSTART + 3, RLENGTH)
+    }else{
+				# Set default interpreter to use
+				str = "sh"
+		}
 
+		return str
+}
+
+BEGIN {
+		# Set temporary dir
+		"mktemp --directory '/tmp/app.awk-XXXXXX'" | getline tmp_dir
 }
 
 # Rule for printing when we are not in the template mode
@@ -21,14 +35,13 @@ function interpreter()
 
 # Rule for detecting end of template
 tmplt_mode && /^[|!]#/ {
-		if(tmplt_indicator == indicator()){
+		if(tmplt_indicator == indicator($0)){
 				tmplt_mode = 0
 				tmplt_indicator = 0
 
-				# TODO: Add support for other interpreters
-				# system(verbatim)
-				print verbatim > "/tmp/app.awk.tmp"
-				system("sh /tmp/app.awk.tmp")
+				tmp_file = tmp_dir "/template.tmp"
+				print verbatim > tmp_file
+				system(tmplt_interpreter " " tmp_file)
 
 				verbatim = ""
 		}
@@ -42,5 +55,6 @@ tmplt_mode {
 # Rule for detecting begin of template
 /^#[|!]/ {
 	tmplt_mode = 1
-  tmplt_indicator = indicator()
+  tmplt_indicator = indicator($0)
+	tmplt_interpreter = interpreter($0)
 }
