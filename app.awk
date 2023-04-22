@@ -38,6 +38,12 @@ function interpreter(t_str)
 BEGIN {
 		# Set temporary dir
 		"mktemp --directory '/tmp/app.awk-XXXXXX'" | getline tmp_dir
+		tmp_file = tmp_dir "/template.tmp"
+}
+
+END {
+		# Remove the temporary file when we are done
+		# "rm  -r" tmp_dir
 }
 
 # Rule for detecting begin of a comment block
@@ -80,11 +86,14 @@ tmplt_mode && /^[|!]#/ {
 				tmplt_mode = 0
 				tmplt_indicator = 0
 
-				tmp_file = tmp_dir "/template.tmp"
 				print verbatim > tmp_file
 				verbatim = ""
 
 				system(tmplt_interpreter " " tmp_file)
+
+				# Awk redirection only clears the file contents on first open
+				# We must explicitly close it for it to be cleared again
+				close(tmp_file)
 		}
 }
 
