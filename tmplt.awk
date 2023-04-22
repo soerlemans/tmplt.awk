@@ -37,7 +37,7 @@ function interpreter(t_str)
 
 BEGIN {
 		# Set temporary dir
-		"mktemp --directory '/tmp/app.awk-XXXXXX'" | getline tmp_dir
+		"mktemp --directory '/tmp/tmplt.awk-XXXXXX'" | getline tmp_dir
 		tmp_file = tmp_dir "/template.tmp"
 }
 
