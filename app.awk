@@ -42,8 +42,8 @@ BEGIN {
 }
 
 END {
-		# Remove the temporary file when we are done
-		# "rm  -r" tmp_dir
+		# Remove the temporary directory when the script is done
+		system("rm  -r " tmp_dir "/")
 }
 
 # Rule for detecting begin of a comment block
