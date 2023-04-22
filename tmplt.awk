@@ -16,88 +16,88 @@
 # Function to extract the | or ! indicator
 function indicator(t_str)
 {
-	start = match(t_str, /[|!]/)
+  start = match(t_str, /[|!]/)
 
-	return substr(t_str, start, 1)
+  return substr(t_str, start, 1)
 }
 
 # Function to extract the interpreter argument
 function interpreter(t_str)
 {
-		start = match(t_str, /^#[|!]:[a-zA-Z0-9]+/)
-		if(start){
-				str = substr(t_str, RSTART + 3, RLENGTH)
-    }else{
-				# Set default interpreter to use
-				str = "sh"
-		}
+  start = match(t_str, /^#[|!]:[a-zA-Z0-9]+/)
+  if(start){
+      str = substr(t_str, RSTART + 3, RLENGTH)
+  }else{
+      # Set default interpreter to use
+      str = "sh"
+  }
 
-		return str
+  return str
 }
 
 BEGIN {
-		# Set temporary dir
-		"mktemp --directory '/tmp/tmplt.awk-XXXXXX'" | getline tmp_dir
-		tmp_file = tmp_dir "/template.tmp"
+  # Set temporary dir
+  "mktemp --directory '/tmp/tmplt.awk-XXXXXX'" | getline tmp_dir
+  tmp_file = tmp_dir "/template.tmp"
 }
 
 END {
-		# Remove the temporary directory when the script is done
-		system("rm  -r " tmp_dir "/")
+  # Remove the temporary directory when the script is done
+  system("rm  -r " tmp_dir "/")
 }
 
 # Rule for detecting begin of a comment block
 !tmplt_mode && /^#\?/ {
-		cmnt_mode = 1
+  cmnt_mode = 1
 }
 
 # Rule for detecting end of a comment block
 cmnt_mode && /^\?#/ {
-		cmnt_mode = 0
-		next
+  cmnt_mode = 0
+  next
 }
 
 # As long as we are in comment mode skip the line
 cmnt_mode {
-		next
+  next
 }
 
 # Rule for detecting begin of template
 /^#[|!]/ {
-		# If we are on the first line we do not want the shebang
-		# To have us enter template mode
-		if(NR != 1){
-				tmplt_mode = 1
-				tmplt_indicator = indicator($0)
-				tmplt_interpreter = interpreter($0)
-		}
+  # If we are on the first line we do not want the shebang
+  # To have us enter template mode
+  if(NR != 1){
+    tmplt_mode = 1
+    tmplt_indicator = indicator($0)
+    tmplt_interpreter = interpreter($0)
+  }
 
-		next
+  next
 }
 
 # Rule for printing when we are not in the template mode
 ! tmplt_mode {
-		print $0
+  print $0
 }
 
 # Rule for detecting end of template
 tmplt_mode && /^[|!]#/ {
-		if(tmplt_indicator == indicator($0)){
-				tmplt_mode = 0
-				tmplt_indicator = 0
+  if(tmplt_indicator == indicator($0)){
+    tmplt_mode = 0
+    tmplt_indicator = 0
 
-				print verbatim > tmp_file
-				verbatim = ""
+    print verbatim > tmp_file
+    verbatim = ""
 
-				system(tmplt_interpreter " " tmp_file)
+    system(tmplt_interpreter " " tmp_file)
 
-				# Awk redirection only clears the file contents on first open
-				# We must explicitly close it for it to be cleared again
-				close(tmp_file)
-		}
+    # Awk redirection only clears the file contents on first open
+    # We must explicitly close it for it to be cleared again
+    close(tmp_file)
+  }
 }
 
 # Rule for evaluating contents of template
 tmplt_mode {
-		verbatim = verbatim $0 "\n"
+  verbatim = verbatim $0 "\n"
 }
